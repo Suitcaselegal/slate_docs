@@ -5,8 +5,8 @@ language_tabs:
   - shell
   - javascript
 
-includes:
-  - errors
+# includes:
+#   - errors
 
 search: true
 
@@ -28,32 +28,8 @@ We have examples in Shell and JavaScript. You can view code examples to the righ
 Note that all routes are only available via https
 </aside>
 
-# Authentication
 
-```shell
-curl "api_endpoint_here" \
-  -H "Authorization: Bearer key"
-```
-
-```javascript
-let headers = new Headers();
-headers.set('Authorization', `Bearer ${key}`);
-await fetch("api_endpoint_here", {
-	method: 'GET',
-	headers,
-});
-```
-
-> Make sure to replace `key` with your API key.
-
-API's that include the **'/set'** or **'/admin'** path are only availiable if an authorization header is present. 
-
-
-<aside class="notice">
-Ask an admin for a test key if API calls to /set or /admin is required.
-</aside>
-
-# Settlement App V2
+# Settlement Api V2
 The API definitions for **V2** are up-to-date. <br>
 These endpoints are actively maintained and used by the client side code in <a href="https://suitcase.legal">**Settlement App**</a>.
 
@@ -94,12 +70,6 @@ const payload = new URLSearchParams({
 const options = {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-  },
-  body: payload,
-};
-const response = await fetch(url, options);
-```
 ### Body Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
@@ -127,7 +97,7 @@ Code        | Description
 ----------- | -----------
 201 Created | The user was successfully created. The response body is empty.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Password reset request
 This endpoint initializes a password reset process by sending the user an email including a short lived token.
@@ -156,7 +126,7 @@ Code        | Description
 ----------- | -----------
 200 Success | The password request was successfully initialized. The response body is empty.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Change user password
 This endpoint finishes the password reset process by changing the password of a user based on a short lived token.
@@ -187,7 +157,7 @@ Code        | Description
 ----------- | -----------
 204 NoContent | The password request was successfully finished. No new content is coming from the server.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Contract preview
 This endpoint returns a preview of the contracts for a given use case
@@ -283,7 +253,7 @@ Code        | Description
 ----------- | -----------
 200 Success | The response is a json array containing the clauses of the contract.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Fetch case via casehub
 This endpoint fetches a case via a token to be visible for users that don't have a user account.
@@ -309,7 +279,7 @@ Code        | Description
 ----------- | -----------
 200 Success | The response has no body if the case is ongoing or finished. If the case status is 'started' the response has a json body containing relevant case information.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Fetch case file via casehub
 This endpoint fetches a case file via a token to be visible for users that don't have a user account.
@@ -337,7 +307,7 @@ Code        | Description
 ----------- | -----------
 200 Success | The response is a stream with the contents of the file.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
 
 ## Bid on case via casehub
 This endpoint places a bid for an open case and registers a user account for the party that made the bid (registration is legally required at this point).
@@ -440,4 +410,710 @@ Code        | Description
 ----------- | -----------
 200 Success | The bid was successfully placed.
 400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.The above command returns an empty response with a 201 Created status code on success.
+500 Internal Server Error | An unexpected error occurred on the server.
+
+# Authenticated Settlement Api V2 
+
+```shell
+curl "api_endpoint_here" \
+  -H "Authorization: Bearer key"
+```
+
+```javascript
+let headers = new Headers();
+headers.set('Authorization', `Bearer ${key}`);
+await fetch("api_endpoint_here", {
+	method: 'GET',
+	headers,
+});
+```
+
+> Make sure to replace `key` with your API key.
+
+The following API's include the **'/set'** path and are only accessible if an authorization header is present. <br>
+Additionally the backend extracts necessary user information (email) from the jwt on every request.
+
+<aside class="notice">
+Ask an admin for a test key if API calls to /set or /admin is required.
+</aside>
+
+## Fetch cases
+This endpoint fetches cases with optional filters.
+### Https Request
+`GET https://api.suitcase.legal/v2/set/case`
+
+```shell
+curl -X GET "https://api.suitcase.legal/v2/set/case?filter_status=Failed"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/case?filter_status=Failed', {
+	method: 'GET',
+});
+```
+
+> The above request returns JSON (shortened) as follows:
+
+```json
+{
+   "cases":[
+      {
+         "id":1,
+         "offer_1":null,
+         "offer_2":null,
+         "offer_3":null,
+         "request_1":70000,
+         "request_2":140000,
+         "request_3":120000,
+         "start_date":"2025-07-07T09:05:30.162034Z",
+         "claim":{
+            "type":"DepositCase",
+            "deposit":100000,
+            "date_start":"2015-11-11T00:00:00Z",
+            "date_end":"2025-07-07T00:00:00Z",
+            "received_value":100,
+            "property":"ABC Straße, 33102, Paderborn"
+         },
+         "status":"Failed",
+         .
+         .
+         .
+      }
+   ],
+   "num_cases":1
+}
+```
+
+
+### Query Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+offset            | No | (u32) The cases are paged by 50 cases per batch. Offset of 1 fetches the first 50 cases while offset of 2 fetches the cases 50 - 100.
+search            | No | (String) Filter the case by a search string. Fields that apply the search string are claimant + respondent information and ref_id.
+filter_start_date | No | (i32) The cases are filtered by the number of days since the cases start_date passed. 3 indicates that the cases start_date cannot be older than 3 days.
+filter_final_date | No | (i32) The cases are filtered by the number of days since the cases end_date passed. 3 indicates that the cases end_date cannot be older than 3 days.
+filter_status     | No | (String) The cases are filtered by their status. Values can be 'Laufend', 'Erfolgreich' and 'Erfolglos'.
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response returns a JSON structure that contains an array with all the cases of the user after the filter is applied. Additonally the JSON structure includes the total number of cases for the user
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Fetch case file
+This endpoint fetches a case file.
+### Https Request
+`GET https://api.suitcase.legal/v2/set/case/file`
+
+```shell
+curl -X GET "https://api.suitcase.legal/v2/set/case/file?id=1&name=Testfile.pdf"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/case/file?id=1&name=Testfile.pdf', {
+	method: 'GET',
+});
+```
+
+### Query Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) The id of the case, the file belongs to.
+name | Yes | (String) The name of the file to be downloaded.
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response is a stream with the contents of the file.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Bid on case 
+This endpoint places a bid for an open case.
+### Https Request
+`PATCH https://api.suitcase.legal/v2/set/case/bid`
+
+```shell
+curl -X PATCH "https://api.suitcase.legal/v2/set/case/bid" \
+  -d "email=bidder@example.com" \
+  -d "value=100000" \
+  -d "value_2=50000" \
+  -d "value_3=20000" 
+
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/case/bid';
+const payload = new URLSearchParams({
+  'email': 'bidder@example.com',
+  'value': '100000',
+  'value_2': '50000',
+  'value_3': '20000'
+});
+const options = {
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Body Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+email | Yes | (String) The email address associated with the existing case.
+value | Yes | (Integer) The primary bid value.
+value_2 | No | (Integer) An optional secondary bid value.
+value_3 | No | (Integer) An optional tertiary bid value.
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response contains the updated case information as a JSON object.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Fetch user
+This endpoint fetches a user.
+### Https Request
+`GET https://api.suitcase.legal/v2/set/user`
+
+```shell
+curl -X GET "https://api.suitcase.legal/v2/set/user"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/user', {
+	method: 'GET',
+});
+```
+
+> The above request returns a JSON structure as follows:
+
+```json
+{
+   "user_type":"Lawyer",
+   "email":"test@suitcase.legal",
+   "firstname":"Max",
+   "lastname":"Mustermann",
+   "salutation":"Herr",
+   "title":null,
+   "address":{
+      "street":"Am Kartoffelgarten 14",
+      "zip":"81671",
+      "city":"München",
+      "country":"Germany"
+   },
+   "phone":"+49123456789",
+   "account_association":{
+      "Custom":"Suitcase"
+   },
+   "discount":100, // Note that the discount is a percentage.
+   "law_firm":"Suitcase"
+}
+```
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response returns the user information in JSON format.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Resend email confirmation
+This endpoint resend's a confirmation email for not confirmed accounts.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/user/confirmation`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/user/confirmation"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/user/confirmation', {
+	method: 'POST',
+});
+```
+
+### Response Status 
+Code        | Description
+----------- | -----------
+202 Accepted | The request was successful and a new email has been sent.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Case creation
+This endpoint creates a new case.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/case`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/case" \
+  -d '{"initial_value":"10000", ...}'
+
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/case';
+const payload = new URLSearchParams({
+  'initial_value': '10000',
+  .
+  .
+  .
+});
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Body Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+opposition | Yes | (JSON) Nested json object(participant) for the opposition
+initial_value | Yes | (Integer) The initial bid value.
+second_value | No | (Integer) An optional secondary bid value.
+third_value | No | (Integer) An optional tertiary bid value.
+claim | Yes | (JSON) Nested json object(claim) for the claim
+mandate | No | (JSON) Nested json object(participant) for a mandate (relevant if case opener is lawyer)
+opposition_mandate | No | (JSON) Nested json(participant) object for an opposition_mandate (relevant if opposition has lawyer)
+is_respondent | No | (boolean) Flag if case is opened by respondent. (Defaults to false)
+insurance | No | (String) Insurance of the case opener.
+insurance_policy | No | (String) Insurance policy number of the case opener.
+description | No | (String) Case description.
+
+### Participant Object
+Parameter | Required | Description
+--------- | -------- | -----------
+email | No | (String) Email of the participant. (Defaults to random generated email).
+firstname | Yes | (String)
+lastname | Yes | (String)
+street | Yes | (String)
+zip | Yes | (String)
+city | Yes | (String) 
+country | Yes | (String)
+phone | No | (String)
+company | No | (String) Company name without the legal form.
+legal_form | No | (String) Company legal form (Gmbh, etc..).
+commercial_register | No | (String) Commercial register of the company.
+commercial_register_number | No | (String) Commercial register number of the company.
+care_of | No | (String) Alternative address for post.
+
+### Claim Object
+The claim object can take many shaped based on the use case. Viable constructs are shown below.
+
+### Liability Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "LiabilityCase"
+reclaim_value | Yes | (Integer) The value to be reclaimed.
+reclaim_number | Yes | (String) The unique identifier for the reclaim.
+invoice_number | Yes | (String) The associated invoice number.
+
+### Phishing Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "PhishingCase"
+charges | Yes | (Array of Date/Time UTC and Integer tuples) A list of charges, each with a timestamp and an amount.
+identifier | No | (String) An optional identifier for the phishing attempt.
+customer_identifier | No | (String) An optional identifier for the customer involved.
+lawsuit | Yes | (Boolean) Indicates if a lawsuit has been filed.
+cost_covered | Yes | (Boolean) Indicates if the costs related to the phishing are covered.
+
+### VolunteerTermination Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "VolunteerTerminationCase"
+id | Yes | (Integer) Unique identifier for the volunteer termination case.
+date_start | Yes | (Date/Time UTC) The start date of the volunteer's engagement.
+salary | Yes | (Integer) The monthly salary of the volunteer.
+kids | Yes | (Integer) Number of children.
+in_need_of_care_relatives | Yes | (Integer) Number of relatives in need of care.
+disability | Yes | (Boolean) Indicates if the volunteer has a disability.
+factors | No | (JSON) Additional factors influencing the volunteer termination.
+
+### DirectClaims Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "DirectClaimsCase"
+damage_subject | Yes | (String) The subject or nature of the damage claim.
+damage_number | Yes | (String) The unique reference number for the damage claim.
+
+### FlightDelay Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "FlightDelayCase"
+departure | Yes | (String) The departure airport code or name.
+destination | Yes | (String) The destination airport code or name.
+date_time | Yes | (Date/Time UTC) The scheduled date and time of the flight.
+flight_number | Yes | (String) The flight identification number.
+
+### Cancellation Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "CancellationCase"
+salary | Yes | (Integer) The salary relevant to the cancellation.
+date_start | Yes | (Date/Time UTC) The original start date of the cancelled agreement.
+date_end | Yes | (Date/Time UTC) The original end date of the cancelled agreement.
+date_signature | Yes | (Date/Time UTC) The date the cancellation agreement was signed.
+factors | No | (JSON) Additional factors for the cancellation use case.
+
+### RentalTermination Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "RentalTerminationCase"
+rent | Yes | (Integer) The monthly rent amount.
+date_end | Yes | (Date/Time UTC) The desired termination date for the rental agreement.
+property | Yes | (String) The address of the rented property.
+
+### Deposit Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "DepositCase"
+deposit | Yes | (Integer) The original deposit amount.
+date_start | Yes | (Date/Time UTC) The start date of the deposit period.
+date_end | Yes | (Date/Time UTC) The end date of the deposit period.
+received_value | Yes | (Integer) The value received from the deposit.
+property | Yes | (String) The address of the property associated with the deposit.
+
+### Termination Object
+Parameter | Required | Description
+--------- | -------- | -----------
+type | Yes | (String) "TerminationCase"
+salary | Yes | (Integer) The employee's salary at the time of termination.
+date_start | Yes | (Date/Time UTC) The employment start date.
+date_end | Yes | (Date/Time UTC) The employment end date.
+date_notice | Yes | (Date/Time UTC) The date the termination notice was given.
+reason | Yes | (String) The reason for the termination.
+factors | No | (JSON) Additional factors influencing the termination case.
+
+### Factors Object
+Parameter | Required | Description
+--------- | -------- | -----------
+termination_date | No | (Date/Time UTC) An alternative or adjusted termination date.
+exemption_instant | No | (Boolean) Indicates if an instant exemption applies.
+exemption_date | No | (Date/Time UTC) An alternative date for exemption.
+sprinter_clause | No | (Integer) Value related to a sprinter clause.
+overtime | No | (Integer) Accumulated overtime hours.
+vacation | No | (Integer) Remaining vacation days.
+christmas_pay | No | (Integer) Amount of Christmas bonus.
+vacation_pay | No | (Integer) Amount of vacation pay.
+commission | No | (Integer) Commission amount.
+annual_bonus | No | (Integer) Annual bonus percentage.
+other_compensation | No | (JSON) Details about other compensation components.
+company_car | No | (JSON) Details about the company car.
+provided_items | No | (String) Description of items provided by the company.
+arbeitszeugnis | No | (Integer) Value related to the employment reference (Arbeitszeugnis).
+gerichtsvergleich | No | (String) Details about a court settlement (Gerichtsvergleich).
+
+### Compensation Object
+Parameter | Required | Description
+--------- | -------- | -----------
+reason | Yes | (String) The reason for the additional compensation.
+amount | Yes | (Integer) The amount of the additional compensation.
+
+### Car Object
+Parameter | Required | Description
+--------- | -------- | -----------
+car_date | Yes | (Date/Time UTC) The date related to the company car.
+car_pay | No | (Integer) The monetary value or payment associated with the car.
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response contains a json object with the id, ref_id and stripe payment id (in case of 0,00 the stripe payment id is 'Whitelisted')
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Upload case file
+This endpoint uploads a file for a given case.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/case/file`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/case/file" \
+  --form id='1' ...
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/case/file';
+const formData = new FormData();
+
+formData.append('id', "1");
+files.forEach((file) => { // files is an array of files
+		formData.append('file', file);
+});
+
+const options = {
+  method: 'POST',
+  body: formData,
+};
+const response = await fetch(url, options);
+```
+
+### FormData Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) Id of the case
+files | Yes | (Array[Files]) An array of files
+
+### Response Status 
+Code        | Description
+----------- | -----------
+201 Created | The files were uploaded.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Delete a case file
+This endpoint deletes a file for a given case.
+### Https Request
+`DELETE https://api.suitcase.legal/v2/set/case/file`
+
+```shell
+curl -X DELETE "https://api.suitcase.legal/v2/set/case/file?id=1&name=Test.pdf"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/case/file?id=1&name=Test.pdf', {
+	method: 'DELETE',
+});
+```
+
+### Query Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) Id of the case
+name | Yes | (String) Name of the file
+
+### Response Status 
+Code        | Description
+----------- | -----------
+204 NoContent | The file was deleted and no content new content is returned from the server.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Generate limitation contract
+This endpoint generates a limitation contract for a Failed/Expired case.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/contract/limitation`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/contract/limitation"  \
+  d "id=1" \
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/contract/limitation';
+const payload = new URLSearchParams({
+  'id': 'id',
+});
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Form Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) Id of the case
+
+### Response Status 
+Code        | Description
+----------- | -----------
+201 Created | The contract was generated.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## User feedback
+This endpoint creates user feedback.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/feedback`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/feedback"  \
+  d "email=test@suitcase.legal" \
+  d "rating=10" \
+  d "feedback=big bug" \
+  d "feedback_type=bug" \
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/feedback';
+const payload = new URLSearchParams({
+  'email': 'test@suitcase.legal',
+  'rating': 10,
+  'feedback': 'big bug',
+  'feedback_type': 'bug',
+});
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Form Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+email | Yes | (String) email of a user
+rating | Yes | (i32) rating points (1-10)
+feedback | Yes | (String) Feedback text
+feedback_type | Yes | (String) feedback type ("feature request", "bug" etc...)
+
+### Response Status 
+Code        | Description
+----------- | -----------
+201 Created | The feedback was created.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Case statistics
+This endpoint creates case statistics.
+### Https Request
+`POST https://api.suitcase.legal/v2/set/statistics`
+
+```shell
+curl -X POST "https://api.suitcase.legal/v2/set/statistics" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 123,
+    "offer_1_probability": 0.1,
+    "offer_2_probability": 0.2,
+    "offer_3_probability": 0.3,
+    "request_1_probability": 0.4,
+    "request_2_probability": 0.5,
+    "request_3_probability": 0.6,
+    "registration": {
+      "recommendation": 0.9,
+      "dispute_value": 100000,
+      "duration_registration": "PT1H30M"
+    }
+  }'
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/statistics';
+const payload = {
+  id: 123,
+  offer_1_probability: 0.1,
+  offer_2_probability: 0.2,
+  offer_3_probability: 0.3,
+  request_1_probability: 0.4,
+  request_2_probability: 0.5,
+  request_3_probability: 0.6,
+  registration: {
+    recommendation: 0.9,
+    dispute_value: 100000,
+    duration_registration: "PT1H30M"
+  }
+};
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Body Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+offer_1_probability | No | (f32) Probability for offer 1
+offer_2_probability | No | (f32) Probability for offer 2
+offer_3_probability | No | (f32) Probability for offer 3
+request_1_probability | No | (f32) Probability for request 1
+request_2_probability | No | (f32) Probability for request 2
+request_3_probability | No | (f32) Probability for request 3
+registration | No | (JSON) Nested json object(CaseCreationStatFields) 
+
+### CaseCreationStatFields Object
+Parameter | Required | Description
+--------- | -------- | -----------
+recommendation | Yes | (f32) Recommendation value
+dispute_value | Yes | (i64) Dispute value in cents
+duration_registration | Yes | (String) Duration of registration in ISO 8601 format
+
+### Response Status 
+Code        | Description
+----------- | -----------
+201 Created | The statistic was created.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Case statistics modification
+This endpoint modifies case statistics based on user nps for a case.
+### Https Request
+`PATCH https://api.suitcase.legal/v2/set/statistics`
+
+```shell
+curl -X PATCH "https://api.suitcase.legal/v2/set/statistics" \
+  -d "id=123" \
+  -d "nps=7" \
+  -d "nps_text=hallo" \
+  -d "is_from=respondent" \
+```
+```javascript
+const url = 'https://api.suitcase.legal/v2/set/statistics';
+const payload = new URLSearchParams({
+  "id": "123",
+  "nps": "7",
+  "nps_text": "hallo",
+  "is_from": "respondent",
+});
+const options = {
+  method: 'PATCH',
+  headers: {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  },
+  body: payload,
+};
+const response = await fetch(url, options);
+```
+
+### Body Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) Id of the case
+nps | Yes | (i32) Nps score (1-10)
+nps_text | Yes | (String) feedback text
+is_from | Yes | (String) role of the user in a given case(claimant/respondent)
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The statistic were modified.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
+
+## Case statistics submitted
+This endpoint checks if a user has already submitted nps for a case.
+### Https Request
+`GET https://api.suitcase.legal/v2/set/statistics/submitted`
+
+```shell
+curl -X GET "https://api.suitcase.legal/v2/set/statistics/submitted?id=1&is_claimant=false"
+```
+```javascript
+await fetch('https://api.suitcase.legal/v2/set/statistics/submitted?id=1&is_claimant=false', {
+	method: 'GET',
+});
+```
+
+### Query Parameters
+Parameter | Required | Description
+--------- | -------- | -----------
+id | Yes | (i32) Id of the case
+is_claimant | Yes | (boolean) Flag if the request is coming from the claimant
+
+### Response Status 
+Code        | Description
+----------- | -----------
+200 Success | The response contains a json object with a single field 'nps_submitted: bool'.
+400 Bad Request | The request was malformed (e.g., missing required fields).
+500 Internal Server Error | An unexpected error occurred on the server.
