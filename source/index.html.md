@@ -43,13 +43,15 @@ curl -X POST "https://api.suitcase.legal/v2/user" \
   -d "user_type=private" \
   -d "email=test@example.com" \
   -d "password=a_strong_password" \
-  -d "firstname=John" \
-  -d "lastname=Doe" \
+  -d "name=John Doe" \
+  -d "title=Dr." \
   -d "salutation=Mr." \
   -d "street=123 Main St" \
   -d "zip=12345" \
   -d "city=Anytown" \
   -d "country=USA" \
+  -d "care_of=abc-def" \
+  -d "account_association=Meinrecht" \
   -d "phone=555-123-4567"
 ```
 ```javascript
@@ -58,13 +60,15 @@ const payload = new URLSearchParams({
   'user_type': 'private',
   'email': 'test@example.com',
   'password': 'a_strong_password',
-  'firstname': 'John',
-  'lastname': 'Doe',
+  'name': 'John Doe',
+  'title': 'Dr.',
   'salutation': 'Mr.',
   'street': '123 Main St',
   'zip': '12345',
   'city': 'Anytown',
   'country': 'USA',
+  'care_of': 'abc-def',
+  'account_association': 'Meinrecht',
   'phone': '555-123-4567'
 });
 const options = {
@@ -76,8 +80,7 @@ Parameter | Required | Description
 user_type | Yes | (String) The type of user account (e.g., "private", "company", "lawyer").
 email | Yes | (String) The user's email address. Must be unique.
 password | Yes | (String) The user's password.
-firstname | Yes | (String) The user's first name.
-lastname | Yes | (String) The user's last name.
+name | Yes | (String) The user's name. If it is a company, it is the company name.
 salutation | Yes | (String) The user's salutation (e.g., "Mr.", "Ms.").
 street | Yes | (String) The user's street and house number.
 zip | Yes | (String) The user's postal code.
@@ -85,10 +88,6 @@ city | Yes | (String) The user's city.
 country | Yes | (String) The user's country.
 phone | Yes | (String) The user's phone number.
 title | No | (String) The user's academic or professional title.
-company | No | (String) The user's company name.
-commercial_register | No | (String) The commercial register where the company is listed.
-commercial_register_number | No | (String) The company's commercial register number.
-legal_form | No | (String) The legal form of the company.
 care_of | No | (String) "Care of" address line.
 account_association | No | (String) Any associated account identifier.
 
@@ -281,34 +280,6 @@ Code        | Description
 400 Bad Request | The request was malformed (e.g., missing required fields).
 500 Internal Server Error | An unexpected error occurred on the server.
 
-## Fetch case file via casehub
-This endpoint fetches a case file via a token to be visible for users that don't have a user account.
-### Https Request
-`GET https://api.suitcase.legal/v2/casehub/file`
-
-```shell
-curl -X GET "https://api.suitcase.legal/v2/casehub/file?uuid=ABCDE12345&email=testmail@suitcase.legal&name=Testfile.pdf"
-```
-```javascript
-await fetch('https://api.suitcase.legal/v2/casehub/file?uuid=ABCDE12345&email=testmail@suitcase.legal&name=Testfile.pdf', {
-	method: 'GET',
-});
-```
-
-### Query Parameters
-Parameter | Required | Description
---------- | -------- | -----------
-uuid | Yes | (String) uuid that is tied to a case.
-email | Yes | (String) email that is tied to a case.
-name | Yes | (String) name of the file.
-
-### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response is a stream with the contents of the file.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
-
 ## Bid on case via casehub
 This endpoint places a bid for an open case and registers a user account for the party that made the bid (registration is legally required at this point).
 ### Https Request
@@ -324,8 +295,7 @@ curl -X PATCH "https://api.suitcase.legal/v2/casehub/bid" \
   -d "user_type=private" \
   -d "new_email=newuser@example.com" \
   -d "password=new_strong_password" \
-  -d "firstname=Jane" \
-  -d "lastname=Doe" \
+  -d "name=Jane Doe" \
   -d "salutation=Ms." \
   -d "street=456 Oak Ave" \
   -d "zip=98765" \
@@ -333,10 +303,6 @@ curl -X PATCH "https://api.suitcase.legal/v2/casehub/bid" \
   -d "country=Canada" \
   -d "phone=555-987-6543" \
   -d "title=Dr." \
-  -d "company=Example Corp" \
-  -d "commercial_register=SomeReg" \
-  -d "commercial_register_number=12345" \
-  -d "legal_form=LLC" \
   -d "care_of=c/o John Smith" \
   -d "account_association=ACCT123"
 
@@ -352,8 +318,7 @@ const payload = new URLSearchParams({
   'user_type': 'private',
   'new_email': 'newuser@example.com',
   'password': 'new_strong_password',
-  'firstname': 'Jane',
-  'lastname': 'Doe',
+  'name': 'Jane Doe',
   'salutation': 'Ms.',
   'street': '456 Oak Ave',
   'zip': '98765',
@@ -361,10 +326,6 @@ const payload = new URLSearchParams({
   'country': 'Canada',
   'phone': '555-987-6543',
   'title': 'Dr.',
-  'company': 'Example Corp',
-  'commercial_register': 'SomeReg',
-  'commercial_register_number': '12345',
-  'legal_form': 'LLC',
   'care_of': 'c/o John Smith',
   'account_association': 'ACCT123'
 });
@@ -389,8 +350,7 @@ value_3 | No | (Integer) An optional tertiary bid value.
 user_type | Yes | (String) The type of user account for the new user (e.g., "private", "company", "lawyer").
 new_email | Yes | (String) The email address for the newly registered user in case the email address in the database is incorrect.
 password | Yes | (String) The password for the newly registered user.
-firstname | Yes | (String) The first name of the newly registered user.
-lastname | Yes | (String) The last name of the newly registered user.
+name | Yes | (String) The name of the newly registered user. (private or company name)
 salutation | Yes | (String) The salutation for the newly registered user (e.g., "Mr.", "Ms.").
 street | Yes | (String) The street and house number for the newly registered user.
 zip | Yes | (String) The postal code for the newly registered user.
@@ -398,10 +358,6 @@ city | Yes | (String) The city for the newly registered user.
 country | Yes | (String) The country for the newly registered user.
 phone | Yes | (String) The phone number for the newly registered user.
 title | No | (String) The academic or professional title for the newly registered user.
-company | No | (String) The company name for the newly registered user.
-commercial_register | No | (String) The commercial register where the company is listed for the new user.
-commercial_register_number | No | (String) The company's commercial register number for the new user.
-legal_form | No | (String) The legal form of the company for the new user.
 care_of | No | (String) "Care of" address line for the new user.
 account_association | No | (String) Any associated account identifier for the new user.
 
@@ -430,23 +386,23 @@ await fetch("api_endpoint_here", {
 
 > Make sure to replace `key` with your API key.
 
-The following API's include the **'/set'** path and are only accessible if an authorization header is present. <br>
+The following API's include the **''** path and are only accessible if an authorization header is present. <br>
 Additionally the backend extracts necessary user information (email) from the jwt on every request.
 
 <aside class="notice">
-Ask an admin for a test key if API calls to /set or /admin is required.
+Ask an admin for a test key if API calls to  or /admin is required.
 </aside>
 
 ## Fetch cases
 This endpoint fetches cases with optional filters.
 ### Https Request
-`GET https://api.suitcase.legal/v2/set/case`
+`GET https://api.suitcase.legal/v2/case`
 
 ```shell
-curl -X GET "https://api.suitcase.legal/v2/set/case?filter_status=Failed"
+curl -X GET "https://api.suitcase.legal/v2/case?filter_status=Failed"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/case?filter_status=Failed', {
+await fetch('https://api.suitcase.legal/v2/case?filter_status=Failed', {
 	method: 'GET',
 });
 ```
@@ -503,13 +459,13 @@ Code        | Description
 ## Fetch case file
 This endpoint fetches a case file.
 ### Https Request
-`GET https://api.suitcase.legal/v2/set/case/file`
+`GET https://api.suitcase.legal/v2/case/file`
 
 ```shell
-curl -X GET "https://api.suitcase.legal/v2/set/case/file?id=1&name=Testfile.pdf"
+curl -X GET "https://api.suitcase.legal/v2/case/file?id=1&name=Testfile.pdf"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/case/file?id=1&name=Testfile.pdf', {
+await fetch('https://api.suitcase.legal/v2/case/file?id=1&name=Testfile.pdf', {
 	method: 'GET',
 });
 ```
@@ -530,20 +486,20 @@ Code        | Description
 ## Bid on case 
 This endpoint places a bid for an open case.
 ### Https Request
-`PATCH https://api.suitcase.legal/v2/set/case/bid`
+`PATCH https://api.suitcase.legal/v2/case/bid`
 
 ```shell
-curl -X PATCH "https://api.suitcase.legal/v2/set/case/bid" \
-  -d "email=bidder@example.com" \
+curl -X PATCH "https://api.suitcase.legal/v2/case/bid" \
+  -d "id=5" \
   -d "value=100000" \
   -d "value_2=50000" \
   -d "value_3=20000" 
 
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/case/bid';
+const url = 'https://api.suitcase.legal/v2/case/bid';
 const payload = new URLSearchParams({
-  'email': 'bidder@example.com',
+  'id': 5,
   'value': '100000',
   'value_2': '50000',
   'value_3': '20000'
@@ -561,7 +517,7 @@ const response = await fetch(url, options);
 ### Body Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
-email | Yes | (String) The email address associated with the existing case.
+id | Yes | (Integer) The id of the case.
 value | Yes | (Integer) The primary bid value.
 value_2 | No | (Integer) An optional secondary bid value.
 value_3 | No | (Integer) An optional tertiary bid value.
@@ -576,13 +532,13 @@ Code        | Description
 ## Fetch user
 This endpoint fetches a user.
 ### Https Request
-`GET https://api.suitcase.legal/v2/set/user`
+`GET https://api.suitcase.legal/v2/user`
 
 ```shell
-curl -X GET "https://api.suitcase.legal/v2/set/user"
+curl -X GET "https://api.suitcase.legal/v2/user"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/user', {
+await fetch('https://api.suitcase.legal/v2/user', {
 	method: 'GET',
 });
 ```
@@ -591,12 +547,13 @@ await fetch('https://api.suitcase.legal/v2/set/user', {
 
 ```json
 {
+   "user_id": "10",
    "user_type":"Lawyer",
    "email":"test@suitcase.legal",
-   "firstname":"Max",
-   "lastname":"Mustermann",
+   "name":"Max Mustermann",
    "salutation":"Herr",
    "title":null,
+   "care_of":null,
    "address":{
       "street":"Am Kartoffelgarten 14",
       "zip":"81671",
@@ -607,8 +564,6 @@ await fetch('https://api.suitcase.legal/v2/set/user', {
    "account_association":{
       "Custom":"Suitcase"
    },
-   "discount":100, // Note that the discount is a percentage.
-   "law_firm":"Suitcase"
 }
 ```
 
@@ -622,13 +577,13 @@ Code        | Description
 ## Resend email confirmation
 This endpoint resend's a confirmation email for not confirmed accounts.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/user/confirmation`
+`POST https://api.suitcase.legal/v2/user/confirmation`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/user/confirmation"
+curl -X POST "https://api.suitcase.legal/v2/user/confirmation"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/user/confirmation', {
+await fetch('https://api.suitcase.legal/v2/user/confirmation', {
 	method: 'POST',
 });
 ```
@@ -643,15 +598,15 @@ Code        | Description
 ## Case creation
 This endpoint creates a new case.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/case`
+`POST https://api.suitcase.legal/v2/case`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/case" \
+curl -X POST "https://api.suitcase.legal/v2/case" \
   -d '{"initial_value":"10000", ...}'
 
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/case';
+const url = 'https://api.suitcase.legal/v2/case';
 const payload = new URLSearchParams({
   'initial_value': '10000',
   .
@@ -671,60 +626,54 @@ const response = await fetch(url, options);
 ### Body Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
-opposition | Yes | (JSON) Nested json object(participant) for the opposition
+opposition | Yes | (JSON) Nested json object(UserData) for the opposition
 initial_value | Yes | (Integer) The initial bid value.
 second_value | No | (Integer) An optional secondary bid value.
 third_value | No | (Integer) An optional tertiary bid value.
 claim | Yes | (JSON) Nested json object(claim) for the claim
-mandate | No | (JSON) Nested json object(participant) for a mandate (relevant if case opener is lawyer)
-opposition_mandate | No | (JSON) Nested json(participant) object for an opposition_mandate (relevant if opposition has lawyer)
+mandate | No | (JSON) Nested json object(UserData) for a mandate (relevant if case opener is lawyer)
+opposition_mandate | No | (JSON) Nested json(UserData) object for an opposition_mandate (relevant if opposition has lawyer)
 is_respondent | No | (boolean) Flag if case is opened by respondent. (Defaults to false)
 insurance | No | (String) Insurance of the case opener.
-insurance_policy | No | (String) Insurance policy number of the case opener.
 description | No | (String) Case description.
 
-### Participant Object
+### UserData Object
 Parameter | Required | Description
 --------- | -------- | -----------
 email | No | (String) Email of the participant. (Defaults to random generated email).
-firstname | Yes | (String)
-lastname | Yes | (String)
+name | Yes | (String)
 street | Yes | (String)
 zip | Yes | (String)
 city | Yes | (String) 
 country | Yes | (String)
 phone | No | (String)
-company | No | (String) Company name without the legal form.
-legal_form | No | (String) Company legal form (Gmbh, etc..).
-commercial_register | No | (String) Commercial register of the company.
-commercial_register_number | No | (String) Commercial register number of the company.
 care_of | No | (String) Alternative address for post.
 
 ### Claim Object
 The claim object can take many shaped based on the use case. Viable constructs are shown below.
 
-### Liability Object
+### HaftRegress Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "LiabilityCase"
+type | Yes | (String) "HaftRegress"
 reclaim_value | Yes | (Integer) The value to be reclaimed.
 reclaim_number | Yes | (String) The unique identifier for the reclaim.
 invoice_number | Yes | (String) The associated invoice number.
 
-### Phishing Object
+### BankPhishing Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "PhishingCase"
+type | Yes | (String) "BankPhishing"
 charges | Yes | (Array of Date/Time UTC and Integer tuples) A list of charges, each with a timestamp and an amount.
 identifier | No | (String) An optional identifier for the phishing attempt.
 customer_identifier | No | (String) An optional identifier for the customer involved.
 lawsuit | Yes | (Boolean) Indicates if a lawsuit has been filed.
 cost_covered | Yes | (Boolean) Indicates if the costs related to the phishing are covered.
 
-### VolunteerTermination Object
+### ArbeitFreiwilligenprogramm Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "VolunteerTerminationCase"
+type | Yes | (String) "ArbeitFreiwilligenprogramm"
 id | Yes | (Integer) Unique identifier for the volunteer termination case.
 date_start | Yes | (Date/Time UTC) The start date of the volunteer's engagement.
 salary | Yes | (Integer) The monthly salary of the volunteer.
@@ -733,54 +682,53 @@ in_need_of_care_relatives | Yes | (Integer) Number of relatives in need of care.
 disability | Yes | (Boolean) Indicates if the volunteer has a disability.
 factors | No | (JSON) Additional factors influencing the volunteer termination.
 
-### DirectClaims Object
+### HaftDirekt Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "DirectClaimsCase"
+type | Yes | (String) "HaftDirekt"
 damage_subject | Yes | (String) The subject or nature of the damage claim.
 damage_number | Yes | (String) The unique reference number for the damage claim.
 
-### FlightDelay Object
+### ReisenFlugrechte Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "FlightDelayCase"
+type | Yes | (String) "ReisenFlugrechte"
 departure | Yes | (String) The departure airport code or name.
 destination | Yes | (String) The destination airport code or name.
 date_time | Yes | (Date/Time UTC) The scheduled date and time of the flight.
 flight_number | Yes | (String) The flight identification number.
 
-### Cancellation Object
+### ArbeitAufhebung Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "CancellationCase"
+type | Yes | (String) "ArbeitAufhebung"
 salary | Yes | (Integer) The salary relevant to the cancellation.
 date_start | Yes | (Date/Time UTC) The original start date of the cancelled agreement.
 date_end | Yes | (Date/Time UTC) The original end date of the cancelled agreement.
 date_signature | Yes | (Date/Time UTC) The date the cancellation agreement was signed.
 factors | No | (JSON) Additional factors for the cancellation use case.
 
-### RentalTermination Object
+### MieteKuendigung Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "RentalTerminationCase"
+type | Yes | (String) "MieteKuendigung"
 rent | Yes | (Integer) The monthly rent amount.
 date_end | Yes | (Date/Time UTC) The desired termination date for the rental agreement.
 property | Yes | (String) The address of the rented property.
 
-### Deposit Object
+### MieteKaution Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "DepositCase"
+type | Yes | (String) "MieteKaution"
 deposit | Yes | (Integer) The original deposit amount.
-date_start | Yes | (Date/Time UTC) The start date of the deposit period.
 date_end | Yes | (Date/Time UTC) The end date of the deposit period.
 received_value | Yes | (Integer) The value received from the deposit.
 property | Yes | (String) The address of the property associated with the deposit.
 
-### Termination Object
+### ArbeitKuendigung Object
 Parameter | Required | Description
 --------- | -------- | -----------
-type | Yes | (String) "TerminationCase"
+type | Yes | (String) "ArbeitKuendigung"
 salary | Yes | (Integer) The employee's salary at the time of termination.
 date_start | Yes | (Date/Time UTC) The employment start date.
 date_end | Yes | (Date/Time UTC) The employment end date.
@@ -829,14 +777,14 @@ Code        | Description
 ## Upload case file
 This endpoint uploads a file for a given case.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/case/file`
+`POST https://api.suitcase.legal/v2/case/file`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/case/file" \
+curl -X POST "https://api.suitcase.legal/v2/case/file" \
   --form id='1' ...
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/case/file';
+const url = 'https://api.suitcase.legal/v2/case/file';
 const formData = new FormData();
 
 formData.append('id', "1");
@@ -867,13 +815,13 @@ Code        | Description
 ## Delete a case file
 This endpoint deletes a file for a given case.
 ### Https Request
-`DELETE https://api.suitcase.legal/v2/set/case/file`
+`DELETE https://api.suitcase.legal/v2/case/file`
 
 ```shell
-curl -X DELETE "https://api.suitcase.legal/v2/set/case/file?id=1&name=Test.pdf"
+curl -X DELETE "https://api.suitcase.legal/v2/case/file?id=1&name=Test.pdf"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/case/file?id=1&name=Test.pdf', {
+await fetch('https://api.suitcase.legal/v2/case/file?id=1&name=Test.pdf', {
 	method: 'DELETE',
 });
 ```
@@ -894,14 +842,14 @@ Code        | Description
 ## Generate limitation contract
 This endpoint generates a limitation contract for a Failed/Expired case.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/contract/limitation`
+`POST https://api.suitcase.legal/v2/contract/limitation`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/contract/limitation"  \
+curl -X POST "https://api.suitcase.legal/v2/contract/limitation"  \
   d "id=1" \
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/contract/limitation';
+const url = 'https://api.suitcase.legal/v2/contract/limitation';
 const payload = new URLSearchParams({
   'id': 'id',
 });
@@ -930,19 +878,19 @@ Code        | Description
 ## User feedback
 This endpoint creates user feedback.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/feedback`
+`POST https://api.suitcase.legal/v2/feedback`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/feedback"  \
-  d "email=test@suitcase.legal" \
+curl -X POST "https://api.suitcase.legal/v2/feedback"  \
+  d "user_id=5" \
   d "rating=10" \
   d "feedback=big bug" \
   d "feedback_type=bug" \
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/feedback';
+const url = 'https://api.suitcase.legal/v2/feedback';
 const payload = new URLSearchParams({
-  'email': 'test@suitcase.legal',
+  'user_id': 5,
   'rating': 10,
   'feedback': 'big bug',
   'feedback_type': 'bug',
@@ -960,7 +908,7 @@ const response = await fetch(url, options);
 ### Form Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
-email | Yes | (String) email of a user
+user_id | Yes | (Integer) The id of the user.
 rating | Yes | (i32) rating points (1-10)
 feedback | Yes | (String) Feedback text
 feedback_type | Yes | (String) feedback type ("feature request", "bug" etc...)
@@ -975,10 +923,10 @@ Code        | Description
 ## Case statistics
 This endpoint creates case statistics.
 ### Https Request
-`POST https://api.suitcase.legal/v2/set/statistics`
+`POST https://api.suitcase.legal/v2/statistics`
 
 ```shell
-curl -X POST "https://api.suitcase.legal/v2/set/statistics" \
+curl -X POST "https://api.suitcase.legal/v2/statistics" \
   -H "Content-Type: application/json" \
   -d '{
     "id": 123,
@@ -996,7 +944,7 @@ curl -X POST "https://api.suitcase.legal/v2/set/statistics" \
   }'
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/statistics';
+const url = 'https://api.suitcase.legal/v2/statistics';
 const payload = {
   id: 123,
   offer_1_probability: 0.1,
@@ -1049,17 +997,17 @@ Code        | Description
 ## Case statistics modification
 This endpoint modifies case statistics based on user nps for a case.
 ### Https Request
-`PATCH https://api.suitcase.legal/v2/set/statistics`
+`PATCH https://api.suitcase.legal/v2/statistics`
 
 ```shell
-curl -X PATCH "https://api.suitcase.legal/v2/set/statistics" \
+curl -X PATCH "https://api.suitcase.legal/v2/statistics" \
   -d "id=123" \
   -d "nps=7" \
   -d "nps_text=hallo" \
   -d "is_from=respondent" \
 ```
 ```javascript
-const url = 'https://api.suitcase.legal/v2/set/statistics';
+const url = 'https://api.suitcase.legal/v2/statistics';
 const payload = new URLSearchParams({
   "id": "123",
   "nps": "7",
@@ -1094,13 +1042,13 @@ Code        | Description
 ## Case statistics submitted
 This endpoint checks if a user has already submitted nps for a case.
 ### Https Request
-`GET https://api.suitcase.legal/v2/set/statistics/submitted`
+`GET https://api.suitcase.legal/v2/statistics/submitted`
 
 ```shell
-curl -X GET "https://api.suitcase.legal/v2/set/statistics/submitted?id=1&is_claimant=false"
+curl -X GET "https://api.suitcase.legal/v2/statistics/submitted?id=1&is_claimant=false"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/set/statistics/submitted?id=1&is_claimant=false', {
+await fetch('https://api.suitcase.legal/v2/statistics/submitted?id=1&is_claimant=false', {
 	method: 'GET',
 });
 ```
