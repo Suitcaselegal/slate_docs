@@ -618,16 +618,37 @@ This endpoint creates a new case.
 
 ```shell
 curl -X POST "https://api.suitcase.legal/v2/case" \
-  -d '{"bids": [10000,5000,500], ...}'
+  -d '{ "opposition": { "email": "test@suitcase.legal", "name": "Test GmbH", "street": "Street", "zip": "12345", "city": "City", "country": "Country", "user_type": "temporary_company" },
+        "bids": vec![10000, 5000, 500],
+        "claim": { "type": "ArbeitKuendigung", "salary": 450000, "date_start": "2022-02-01T00:00:00.000Z", "date_end": "2023-02-01T00:00:00.000Z", "date_notice": "2023-02-01T00:00:00.000Z", "reason":"betriebsbedingt" },
+        "is_respondent": false,
+        "description": "testdescription"
+      }'
+
 
 ```
 ```javascript
 const url = 'https://api.suitcase.legal/v2/case';
 const payload = {
+  opposition: {
+    email: "test@suitcase.legal",
+    name: "Test GmbH",
+    street: "Street",
+    zip: "12345",
+    city: "City",
+    country: "Country",
+    user_type: "temporary_company"
+  },
   bids: [10000, 5000, 500],
-  .
-  .
-  .
+  claim: {
+    type: "ArbeitKuendigung",
+    salary: 450000,
+    date_start: "2022-02-01T00:00:00.000Z",
+    date_end: "2023-02-01T00:00:00.000Z",
+    date_notice: "2023-02-01T00:00:00.000Z",
+    reason:"betriebsbedingt"
+  },
+  is_respondent: false
 };
 const options = {
   method: 'POST',
@@ -851,11 +872,12 @@ id | Yes | (i32) Id of the case
 name | Yes | (String) Name of the file
 
 ### Response Status 
-Code        | Description
------------ | -----------
-204 NoContent | The file was deleted and no content new content is returned from the server.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+204 | The file was deleted and no content new content is returned from the server.
+400 | Case does not exist | case_not_found
+401 | Invalid jwt | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Generate limitation contract
 This endpoint generates a limitation contract for a Failed/Expired case.
@@ -887,11 +909,13 @@ Parameter | Required | Description
 id | Yes | (i32) Id of the case
 
 ### Response Status 
-Code        | Description
------------ | -----------
-201 Created | The contract was generated.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | -----------
+201 | The contract was generated.
+400 | The internal data was malformed | malformed_data
+400 | Case does not exist | case_not_found
+401 | JWT invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## User feedback
 This endpoint creates user feedback.
@@ -932,11 +956,11 @@ feedback | Yes | (String) Feedback text
 feedback_type | Yes | (String) feedback type ("feature request", "bug" etc...)
 
 ### Response Status 
-Code        | Description
------------ | -----------
-201 Created | The feedback was created.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+201 | The feedback was created.
+401 | JWT invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Case statistics
 This endpoint creates case statistics.
@@ -957,7 +981,7 @@ curl -X POST "https://api.suitcase.legal/v2/statistics" \
     "registration": {
       "recommendation": 0.9,
       "dispute_value": 100000,
-      "duration_registration": "PT1H30M"
+      "duration_registration": "duration"
     }
   }'
 ```
@@ -980,7 +1004,7 @@ const payload = {
 const options = {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'application/json',
   },
   body: payload,
 };
@@ -1006,11 +1030,12 @@ dispute_value | Yes | (i64) Dispute value in cents
 duration_registration | Yes | (String) Duration of registration in ISO 8601 format
 
 ### Response Status 
-Code        | Description
------------ | -----------
-201 Created | The statistic was created.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | -----------
+201 | The statistic was created.
+400 | The case does not exist | case_not_found
+401 | JWT invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Case statistics modification
 This endpoint modifies case statistics based on user nps for a case.
@@ -1051,11 +1076,12 @@ nps_text | Yes | (String) feedback text
 is_from | Yes | (String) role of the user in a given case(claimant/respondent)
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The statistic were modified.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The statistic were modified.
+400 | The case does not exist | case_not_found
+401 | JWT invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Case statistics submitted
 This endpoint checks if a user has already submitted nps for a case.
@@ -1078,8 +1104,9 @@ id | Yes | (i32) Id of the case
 is_claimant | Yes | (boolean) Flag if the request is coming from the claimant
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response contains a json object with a single field 'nps_submitted: bool'.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The response contains a json object with a single field 'nps_submitted: bool'.
+400 | The case does not exist | case_not_found
+401 | JWT invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
