@@ -33,6 +33,16 @@ Note that all routes are only available via https
 The API definitions for **V2** are up-to-date. <br>
 These endpoints are actively maintained and used by the client side code in <a href="https://suitcase.legal">**Settlement App**</a>.
 
+Potential error message are of the following schema: <br>
+{ <br>
+  &emsp;&emsp;"status_code": status_code, <br>
+  &emsp;&emsp;"error": {  <br>
+    &emsp;&emsp;&emsp;&emsp;"message": "an error message" <br>
+    &emsp;&emsp;&emsp;&emsp;"code": "string that represents the error code" (eg. "unauthorized", "user_not_found"...) <br>
+  &emsp;&emsp;} <br>
+}
+
+
 ## Register User
 This endpoint registers a new user in the system.
 ### Https Request
@@ -72,8 +82,12 @@ const payload = new URLSearchParams({
   'phone': '555-123-4567'
 });
 const options = {
-  method: 'POST',
-  headers: {
+	method: 'POST',
+	headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+	body: payload
+});
+```
+
 ### Body Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
@@ -92,11 +106,12 @@ care_of | No | (String) "Care of" address line.
 account_association | No | (String) Any associated account identifier.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-201 Created | The user was successfully created. The response body is empty.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | -----------
+201 | The user was successfully created. | 
+400 | The request was malformed | malformed_data
+409 | The user already exists. | user_conflicted
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Password reset request
 This endpoint initializes a password reset process by sending the user an email including a short lived token.
@@ -106,13 +121,13 @@ The token can be used to set a new password for the user.
 
 ```shell
 curl -X POST "https://api.suitcase.legal/v2/password/reset" \
-  -d "test@example.com" \
+  -d "email=test@example.com" \
 ```
 ```javascript
 await fetch('https://api.suitcase.legal/v2/password/reset', {
 	method: 'POST',
-	headers: { 'Content-Type': 'text/plain' },
-	body: test@example.com,
+	headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+	body: new URLSearchParams({'email': 'test@example.com'}),
 });
 ```
 ### Body Parameters
@@ -121,11 +136,13 @@ Parameter | Required | Description
 email | Yes | (String) Note that this value is required as plaintext.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The password request was successfully initialized. The response body is empty.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The password request was successfully initialized. |
+400 | User not found. | user_not_found
+400 | The request was malformed. | malformed_data
+403 | User not confirmed. | user_unconfirmed
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Change user password
 This endpoint finishes the password reset process by changing the password of a user based on a short lived token.
@@ -152,11 +169,11 @@ password | Yes | (String) The new password.
 token | Yes | (String) The token that is tied to the user account.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-204 NoContent | The password request was successfully finished. No new content is coming from the server.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+204 | The password request was successfully finished. No new content is coming from the server. | 
+403 | No access to this resource | user_forbidden
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Contract preview
 This endpoint returns a preview of the contracts for a given use case
@@ -164,10 +181,10 @@ This endpoint returns a preview of the contracts for a given use case
 `GET https://api.suitcase.legal/v2/contract/preview`
 
 ```shell
-curl -X GET "https://api.suitcase.legal/v2/contract/preview?usecase=DepositCase&factors=0"
+curl -X GET "https://api.suitcase.legal/v2/contract/preview?usecase=MieteKaution&factors=0"
 ```
 ```javascript
-await fetch('https://api.suitcase.legal/v2/contract/preview?usecase=DepositCase&factors=0', {
+await fetch('https://api.suitcase.legal/v2/contract/preview?usecase=MieteKaution&factors=0', {
 	method: 'GET',
 });
 
@@ -248,11 +265,10 @@ _Gerichtsvergleich: 0b100000000000000_
 <aside class="notice">Note that factors are only relevant for TerminationCase and CancellationCase </aside>
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response is a json array containing the clauses of the contract.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code 
+----------- | ----------- | ----------
+200 | The response is a json array containing the clauses of the contract. |
+400 | The request was malformed. | malformed_data
 
 ## Fetch case via casehub
 This endpoint fetches a case via a token to be visible for users that don't have a user account.
@@ -274,11 +290,13 @@ Parameter | Required | Description
 case_uuid | Yes | (String) uuid that is tied to a case.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response has no body if the case is ongoing or finished. If the case status is 'started' the response has a json body containing relevant case information.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The response has no body if the case is ongoing or finished. If the case status is 'started' the response has a json body containing relevant case information. |
+409 | The case status is not 'started' | 
+400 | The request was malformed | malformed_data
+400 | The case does not exist | case_not_found
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Bid on case via casehub
 This endpoint places a bid for an open case and registers a user account for the party that made the bid (registration is legally required at this point).
@@ -287,52 +305,49 @@ This endpoint places a bid for an open case and registers a user account for the
 
 ```shell
 curl -X PATCH "https://api.suitcase.legal/v2/casehub/bid" \
-  -d "uuid=ABC1234" \
-  -d "email=bidder@example.com" \
-  -d "value=100000" \
-  -d "value_2=50000" \
-  -d "value_3=20000" \
-  -d "user_type=private" \
-  -d "new_email=newuser@example.com" \
-  -d "password=new_strong_password" \
-  -d "name=Jane Doe" \
-  -d "salutation=Ms." \
-  -d "street=456 Oak Ave" \
-  -d "zip=98765" \
-  -d "city=Othertown" \
-  -d "country=Canada" \
-  -d "phone=555-987-6543" \
-  -d "title=Dr." \
-  -d "care_of=c/o John Smith" \
-  -d "account_association=ACCT123"
+  -d "{"uuid": "ABC1234",
+       "email": "bidder@example.com",
+       "bids": [100000,50000,20000],
+       "user_type": "private",
+       "new_email": "newuser@example.com",
+       "password": "new_strong_password",
+       "name": "Jane Doe",
+       "salutation": "Ms.",
+       "street": "456 Oak Ave",
+       "zip": "98765",
+       "city": "Othertown",
+       "country": "Canada",
+       "phone": "555-987-6543",
+       "title": "Dr.",
+       "care_of": "c/o John Smith",
+       "account_association": "ACCT12"
+      }"
 
 ```
 ```javascript
 const url = 'https://api.suitcase.legal/v2/casehub/bid';
-const payload = new URLSearchParams({
-  'uuid': 'ABC1234',
-  'email': 'bidder@example.com',
-  'value': '100000',
-  'value_2': '50000',
-  'value_3': '20000',
-  'user_type': 'private',
-  'new_email': 'newuser@example.com',
-  'password': 'new_strong_password',
-  'name': 'Jane Doe',
-  'salutation': 'Ms.',
-  'street': '456 Oak Ave',
-  'zip': '98765',
-  'city': 'Othertown',
-  'country': 'Canada',
-  'phone': '555-987-6543',
-  'title': 'Dr.',
-  'care_of': 'c/o John Smith',
-  'account_association': 'ACCT123'
-});
+const payload = {
+  uuid: 'ABC1234',
+  email: 'bidder@example.com',
+  bids: [100000, 50000, 20000],
+  user_type: 'private',
+  new_email: 'newuser@example.com',
+  password: 'new_strong_password',
+  name: 'Jane Doe',
+  salutation: 'Ms.',
+  street: '456 Oak Ave',
+  zip: '98765',
+  city: 'Othertown',
+  country: 'Canada',
+  phone: '555-987-6543',
+  title: 'Dr.',
+  care_of: 'c/o John Smith',
+  account_association: 'ACCT123'
+};
 const options = {
   method: 'PATCH',
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'application/json',
   },
   body: payload,
 };
@@ -344,9 +359,7 @@ Parameter | Required | Description
 --------- | -------- | -----------
 uuid | Yes | (String) The UUID of the case to bid on.
 email | Yes | (String) The email address associated with the existing case.
-value | Yes | (Integer) The primary bid value.
-value_2 | No | (Integer) An optional secondary bid value.
-value_3 | No | (Integer) An optional tertiary bid value.
+bids | Yes | (Integer array) The bid values. (either 1 or 3)
 user_type | Yes | (String) The type of user account for the new user (e.g., "private", "company", "lawyer").
 new_email | Yes | (String) The email address for the newly registered user in case the email address in the database is incorrect.
 password | Yes | (String) The password for the newly registered user.
@@ -362,11 +375,13 @@ care_of | No | (String) "Care of" address line for the new user.
 account_association | No | (String) Any associated account identifier for the new user.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The bid was successfully placed.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 Success | The bid was successfully placed. |
+409 | The user is not accociate with the case | case_conflicted 
+400 | The request was malformed | malformed_data
+400 | The case does not exist | case_not_found
+500 | An unexpected error occurred on the server. | internal_error
 
 # Authenticated Settlement Api V2 
 
@@ -386,11 +401,11 @@ await fetch("api_endpoint_here", {
 
 > Make sure to replace `key` with your API key.
 
-The following API's include the **''** path and are only accessible if an authorization header is present. <br>
+The following API's are only accessible if an authorization header is present. <br>
 Additionally the backend extracts necessary user information (email) from the jwt on every request.
 
 <aside class="notice">
-Ask an admin for a test key if API calls to  or /admin is required.
+Ask an admin for a test key if required.
 </aside>
 
 ## Fetch cases
@@ -445,16 +460,17 @@ Parameter | Required | Description
 --------- | -------- | -----------
 offset            | No | (u32) The cases are paged by 50 cases per batch. Offset of 1 fetches the first 50 cases while offset of 2 fetches the cases 50 - 100.
 search            | No | (String) Filter the case by a search string. Fields that apply the search string are claimant + respondent information and ref_id.
-filter_start_date | No | (i32) The cases are filtered by the number of days since the cases start_date passed. 3 indicates that the cases start_date cannot be older than 3 days.
-filter_final_date | No | (i32) The cases are filtered by the number of days since the cases end_date passed. 3 indicates that the cases end_date cannot be older than 3 days.
+limit_days_past_start | No | (i32) The cases are filtered by the number of days since the cases start_date passed. 3 indicates that the cases start_date cannot be older than 3 days.
+limit_days_past_end | No | (i32) The cases are filtered by the number of days since the cases end_date passed. 3 indicates that the cases end_date cannot be older than 3 days.
 filter_status     | No | (String) The cases are filtered by their status. Values can be 'Laufend', 'Erfolgreich' and 'Erfolglos'.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response returns a JSON structure that contains an array with all the cases of the user after the filter is applied. Additonally the JSON structure includes the total number of cases for the user
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The response returns a JSON structure that contains an array with all the cases of the user after the filter is applied. Additonally the JSON structure includes the total number of cases for the user
+400 | The request was malformed | malformed_data
+401 | Invalid jwt token | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Fetch case file
 This endpoint fetches a case file.
@@ -477,11 +493,12 @@ id | Yes | (i32) The id of the case, the file belongs to.
 name | Yes | (String) The name of the file to be downloaded.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response is a stream with the contents of the file.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ---------
+200 | The response is a stream with the contents of the file.
+400 | Case does not exist | case_not_found
+401 | Invalid jwt token | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Bid on case 
 This endpoint places a bid for an open case.
@@ -490,24 +507,19 @@ This endpoint places a bid for an open case.
 
 ```shell
 curl -X PATCH "https://api.suitcase.legal/v2/case/bid" \
-  -d "id=5" \
-  -d "value=100000" \
-  -d "value_2=50000" \
-  -d "value_3=20000" 
+  -d "{ "id": 5, "bids": [100000, 50000, 20000] }" 
 
 ```
 ```javascript
 const url = 'https://api.suitcase.legal/v2/case/bid';
-const payload = new URLSearchParams({
-  'id': 5,
-  'value': '100000',
-  'value_2': '50000',
-  'value_3': '20000'
-});
+const payload = {
+  id: 5,
+  bids: [100000, 50000, 20000],
+};
 const options = {
   method: 'PATCH',
   headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
+    'Content-Type': 'application/json',
   },
   body: payload,
 };
@@ -518,16 +530,16 @@ const response = await fetch(url, options);
 Parameter | Required | Description
 --------- | -------- | -----------
 id | Yes | (Integer) The id of the case.
-value | Yes | (Integer) The primary bid value.
-value_2 | No | (Integer) An optional secondary bid value.
-value_3 | No | (Integer) An optional tertiary bid value.
+bids | Yes | (Integer array) The bid values. (1 or 3)
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response contains the updated case information as a JSON object.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The response contains the updated case information as a JSON object.
+400 | The request was malformed | malformed_data
+400 | Case does not exist | case_not_found
+401 | Invalid jwt token | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Fetch user
 This endpoint fetches a user.
@@ -568,11 +580,14 @@ await fetch('https://api.suitcase.legal/v2/user', {
 ```
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response returns the user information in JSON format.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+200 | The response returns the user information in JSON format.
+400 | User does not exist | user_not_found
+400 | The user data is malformed | malformed_data
+401 | Invalid jwt token | unauthorized
+403 | Unconfirmed user | user_unconfirmed
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Resend email confirmation
 This endpoint resend's a confirmation email for not confirmed accounts.
@@ -589,11 +604,12 @@ await fetch('https://api.suitcase.legal/v2/user/confirmation', {
 ```
 
 ### Response Status 
-Code        | Description
------------ | -----------
-202 Accepted | The request was successful and a new email has been sent.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | -----------
+202 | The request was successful and a new email has been sent.
+400 | The user does not exist | user_not_found
+401 | Invalid jwt token | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Case creation
 This endpoint creates a new case.
@@ -602,17 +618,17 @@ This endpoint creates a new case.
 
 ```shell
 curl -X POST "https://api.suitcase.legal/v2/case" \
-  -d '{"initial_value":"10000", ...}'
+  -d '{"bids": [10000,5000,500], ...}'
 
 ```
 ```javascript
 const url = 'https://api.suitcase.legal/v2/case';
-const payload = new URLSearchParams({
-  'initial_value': '10000',
+const payload = {
+  bids: [10000, 5000, 500],
   .
   .
   .
-});
+};
 const options = {
   method: 'POST',
   headers: {
@@ -627,9 +643,7 @@ const response = await fetch(url, options);
 Parameter | Required | Description
 --------- | -------- | -----------
 opposition | Yes | (JSON) Nested json object(UserData) for the opposition
-initial_value | Yes | (Integer) The initial bid value.
-second_value | No | (Integer) An optional secondary bid value.
-third_value | No | (Integer) An optional tertiary bid value.
+bids | Yes | (Integer array) The bid values. (1 or 3 bids)
 claim | Yes | (JSON) Nested json object(claim) for the claim
 mandate | No | (JSON) Nested json object(UserData) for a mandate (relevant if case opener is lawyer)
 opposition_mandate | No | (JSON) Nested json(UserData) object for an opposition_mandate (relevant if opposition has lawyer)
@@ -768,11 +782,13 @@ car_date | Yes | (Date/Time UTC) The date related to the company car.
 car_pay | No | (Integer) The monetary value or payment associated with the car.
 
 ### Response Status 
-Code        | Description
------------ | -----------
-200 Success | The response contains a json object with the id, ref_id and stripe payment id (in case of 0,00 the stripe payment id is 'Whitelisted')
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+201 | The response contains a json object with the id, ref_id and stripe payment id (in case of 0,00 the stripe payment id is 'Whitelisted')
+400 | The request or internal data was malformed | malformed_data
+400 | The user does not exist | user_not_found
+401 | The jwt is invalid | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Upload case file
 This endpoint uploads a file for a given case.
@@ -806,11 +822,13 @@ id | Yes | (i32) Id of the case
 files | Yes | (Array[Files]) An array of files
 
 ### Response Status 
-Code        | Description
------------ | -----------
-201 Created | The files were uploaded.
-400 Bad Request | The request was malformed (e.g., missing required fields).
-500 Internal Server Error | An unexpected error occurred on the server.
+Code        | Description | Error_code
+----------- | ----------- | ----------
+201 | The files were uploaded.
+400 | The request or internal data was malformed | malformed_data
+400 | The user does not exist | user_not_found
+401 | Invalid jwt | unauthorized
+500 | An unexpected error occurred on the server. | internal_error
 
 ## Delete a case file
 This endpoint deletes a file for a given case.
@@ -908,7 +926,7 @@ const response = await fetch(url, options);
 ### Form Parameters
 Parameter | Required | Description
 --------- | -------- | -----------
-user_id | Yes | (Integer) The id of the user.
+user_id | Yes | (Integer) id of a user
 rating | Yes | (i32) rating points (1-10)
 feedback | Yes | (String) Feedback text
 feedback_type | Yes | (String) feedback type ("feature request", "bug" etc...)
