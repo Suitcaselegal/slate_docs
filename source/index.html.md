@@ -104,6 +104,7 @@ phone | Yes | (String) The user's phone number.
 title | No | (String) The user's academic or professional title.
 care_of | No | (String) "Care of" address line.
 account_association | No | (String) Any associated account identifier.
+user_id | No | (Number) The user id in case a temporary user already exists and the email has to be update aswell. (Used in casehub)
 
 ### Response Status 
 Code        | Description | Error_code
@@ -294,91 +295,6 @@ Code        | Description | Error_code
 ----------- | ----------- | ----------
 200 | The response has no body if the case is ongoing or finished. If the case status is 'started' the response has a json body containing relevant case information. |
 409 | The case status is not 'started' | 
-400 | The request was malformed | malformed_data
-400 | The case does not exist | case_not_found
-500 | An unexpected error occurred on the server. | internal_error
-
-## Bid on case via casehub
-This endpoint places a bid for an open case and registers a user account for the party that made the bid (registration is legally required at this point).
-### Https Request
-`PATCH https://api.suitcase.legal/v2/casehub/bid`
-
-```shell
-curl -X PATCH "https://api.suitcase.legal/v2/casehub/bid" \
-  -d "{"uuid": "ABC1234",
-       "email": "bidder@example.com",
-       "bids": [100000,50000,20000],
-       "user_type": "private",
-       "new_email": "newuser@example.com",
-       "password": "new_strong_password",
-       "name": "Jane Doe",
-       "salutation": "Ms.",
-       "street": "456 Oak Ave",
-       "zip": "98765",
-       "city": "Othertown",
-       "country": "Canada",
-       "phone": "555-987-6543",
-       "title": "Dr.",
-       "care_of": "c/o John Smith",
-       "account_association": "ACCT12"
-      }"
-
-```
-```javascript
-const url = 'https://api.suitcase.legal/v2/casehub/bid';
-const payload = {
-  uuid: 'ABC1234',
-  email: 'bidder@example.com',
-  bids: [100000, 50000, 20000],
-  user_type: 'private',
-  new_email: 'newuser@example.com',
-  password: 'new_strong_password',
-  name: 'Jane Doe',
-  salutation: 'Ms.',
-  street: '456 Oak Ave',
-  zip: '98765',
-  city: 'Othertown',
-  country: 'Canada',
-  phone: '555-987-6543',
-  title: 'Dr.',
-  care_of: 'c/o John Smith',
-  account_association: 'ACCT123'
-};
-const options = {
-  method: 'PATCH',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: payload,
-};
-const response = await fetch(url, options);
-```
-
-### Body Parameters
-Parameter | Required | Description
---------- | -------- | -----------
-uuid | Yes | (String) The UUID of the case to bid on.
-email | Yes | (String) The email address associated with the existing case.
-bids | Yes | (Integer array) The bid values. (either 1 or 3)
-user_type | Yes | (String) The type of user account for the new user (e.g., "private", "company", "lawyer").
-new_email | Yes | (String) The email address for the newly registered user in case the email address in the database is incorrect.
-password | Yes | (String) The password for the newly registered user.
-name | Yes | (String) The name of the newly registered user. (private or company name)
-salutation | Yes | (String) The salutation for the newly registered user (e.g., "Mr.", "Ms.").
-street | Yes | (String) The street and house number for the newly registered user.
-zip | Yes | (String) The postal code for the newly registered user.
-city | Yes | (String) The city for the newly registered user.
-country | Yes | (String) The country for the newly registered user.
-phone | Yes | (String) The phone number for the newly registered user.
-title | No | (String) The academic or professional title for the newly registered user.
-care_of | No | (String) "Care of" address line for the new user.
-account_association | No | (String) Any associated account identifier for the new user.
-
-### Response Status 
-Code        | Description | Error_code
------------ | ----------- | ----------
-200 Success | The bid was successfully placed. |
-409 | The user is not accociate with the case | case_conflicted 
 400 | The request was malformed | malformed_data
 400 | The case does not exist | case_not_found
 500 | An unexpected error occurred on the server. | internal_error
